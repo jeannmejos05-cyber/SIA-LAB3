@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Profile</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body class="centered">
+    <div class="card">
+        <h1>My Profile</h1>
+        <form id="profileForm">
+            <label>
+                Full Name
+                <input type="text" id="name" required />
+            </label>
+            <label>
+                Email
+                <input type="email" id="email" required />
+            </label>
+            <hr />
+            <h3>Change Password</h3>
+            <label>
+                Current Password
+                <input type="password" id="currentPassword" />
+            </label>
+            <label>
+                New Password
+                <input type="password" id="newPassword" />
+            </label>
+            <button type="submit" class="btn primary">Save Changes</button>
+        </form>
+        <p id="msg" class="msg"></p>
+        <p style="margin-top:1rem;"><a href="/admin.html">← Back to Dashboard</a></p>
+    </div>
+
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) window.location.href = '/login.html';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('id');
+
+        document.getElementById('name').value = currentUser.name;
+        document.getElementById('email').value = currentUser.email;
+
+        const form = document.getElementById('profileForm');
+        const msg = document.getElementById('msg');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msg.textContent = '';
+            
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+
+            try {
+                const res = await fetch(`/api/profile/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, currentPassword, newPassword })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    msg.textContent = data.error;
+                    msg.classList.add('error');
+                    return;
+                }
+
+                localStorage.setItem('currentUser', JSON.stringify(data.user));
+                msg.textContent = 'Profile updated!';
+                msg.style.color = '#16a34a';
+            } catch {
+                msg.textContent = 'Failed to update profile.';
+                msg.classList.add('error');
+            }
+        });
+    </script>
+</body>
+</html>
